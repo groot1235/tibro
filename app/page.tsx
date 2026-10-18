@@ -1,73 +1,67 @@
-import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs"
-import { auth } from "@clerk/nextjs/server"
+import { Show, SignInButton, SignOutButton, UserButton } from "@clerk/nextjs"
+import { PlusIcon } from "lucide-react"
+import { nanoid } from "nanoid"
+import { ChatAvatar } from "@/components/chat-avatar"
 import { Button } from "@/components/ui/button"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 
-export default async function Page() {
-  const { isAuthenticated, userId } = await auth()
+export const dynamic = "force-dynamic"
+
+export default function Page() {
+  const seed = nanoid()
 
   return (
-    <div className="flex min-h-svh flex-col">
-      <header className="flex h-16 items-center justify-between border-b px-6">
+    <div className="flex min-h-svh flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/95 px-6 backdrop-blur">
+        <span className="text-base font-semibold tracking-tight">Tibro</span>
         <div className="flex items-center gap-2">
-          <span className="font-semibold tracking-tight text-lg">Tibro</span>
-        </div>
-        <div className="flex items-center gap-3">
+          <Show when="signed-in">
+            <SignOutButton>
+              <Button variant="outline" size="sm">
+                Sign out
+              </Button>
+            </SignOutButton>
+            <UserButton />
+          </Show>
           <Show when="signed-out">
-            <SignInButton mode="modal">
-              <Button variant="ghost" size="sm">
+            <SignInButton>
+              <Button variant="outline" size="sm">
                 Sign in
               </Button>
             </SignInButton>
-            <SignUpButton mode="modal">
-              <Button size="sm">Sign up</Button>
-            </SignUpButton>
-          </Show>
-          <Show when="signed-in">
-            <UserButton />
           </Show>
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col p-6">
-        <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">Project ready!</h1>
-            <p className="text-muted-foreground mt-1">
-              Clerk authentication is now set up and configured.
-            </p>
-          </div>
-
-          <Show when="signed-in">
-            <div className="rounded-lg border bg-card p-4 text-card-foreground">
-              <p className="font-medium text-emerald-600 dark:text-emerald-400">
-                ✓ Authenticated
-              </p>
-              <p className="mt-1 font-mono text-xs text-muted-foreground break-all">
-                User ID: {userId}
-              </p>
-            </div>
-          </Show>
-
-          <Show when="signed-out">
-            <div className="rounded-lg border bg-muted/40 p-4">
-              <p className="font-medium">You are currently signed out.</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Use the buttons in the top right or click below to sign in or create an account.
-              </p>
-              <div className="mt-3 flex gap-2">
-                <SignInButton mode="modal">
-                  <Button size="sm">Sign in</Button>
-                </SignInButton>
-              </div>
-            </div>
-          </Show>
-
-          <div className="font-mono text-xs text-muted-foreground">
-            (Press <kbd>d</kbd> to toggle dark mode)
-          </div>
-        </div>
+      <main className="flex flex-1 items-center justify-center p-4">
+        <Empty className="border-0">
+          <EmptyHeader className="max-w-md gap-2">
+            <EmptyMedia>
+              <ChatAvatar seed={seed} className="size-12" />
+            </EmptyMedia>
+            <EmptyTitle className="text-xl font-medium tracking-tight">
+              Meet your first bot
+            </EmptyTitle>
+            <EmptyDescription className="text-muted-foreground">
+              Every bot gets its own personality, memory, and face. Spin one up
+              and start the conversation.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent className="mt-2">
+            <Button variant="secondary" className="rounded-xl px-4">
+              <PlusIcon data-icon="inline-start" />
+              Create a new bot
+            </Button>
+          </EmptyContent>
+        </Empty>
       </main>
     </div>
   )
 }
-
