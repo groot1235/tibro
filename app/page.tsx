@@ -1,6 +1,6 @@
 import { Show, SignInButton, SignOutButton, UserButton } from "@clerk/nextjs"
-import { PlusIcon } from "lucide-react"
 import { nanoid } from "nanoid"
+import { BotDialog } from "@/components/bot-dialog"
 import { ChatAvatar } from "@/components/chat-avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -55,10 +55,7 @@ export default function Page() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent className="mt-2">
-            <Button variant="secondary" className="rounded-xl px-4">
-              <PlusIcon data-icon="inline-start" />
-              Create a new bot
-            </Button>
+            <BotDialog />
           </EmptyContent>
         </Empty>
       </main>

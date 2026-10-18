@@ -61,3 +61,45 @@ thing:
 Only JavaScript and the HTTP API have a pre-10 form. The other six cores were
 released in 2026 and never had one, so any older-looking PHP, Python, Rust, Go,
 Dart or C# API attributed to DiceBear is invented rather than outdated.
+
+## Forms & Server Actions
+
+### 1. Schema Placement & "use server" Boundary
+- **Never export schemas or constants from `"use server"` files.** Next.js App Router treats every export in a `"use server"` file as a Server Action (an async RPC endpoint). Non-function exports become action proxies or undefined on the client, causing `@hookform/resolvers/zod` to fail at runtime with `"Invalid input: not a Zod schema"`.
+- **Always define validation schemas in standard modules without `"use server"`** (e.g., `lib/db/schema.ts` or `lib/validations/*.ts`), and import them into both the client component (`react-hook-form` + `zodResolver`) and the server action.
+- Server action files (`actions/*.ts`) must only export async server action functions and TypeScript types.
+
+### 2. Drizzle & Zod Validation
+- Use `createInsertSchema` and `createSelectSchema` from `drizzle-zod` directly on Drizzle table definitions.
+- Keep dependencies aligned: this project uses `zod@^3` and `drizzle-zod@0.7.x` for compatibility with `@hookform/resolvers`.
+- Derive form schemas by omitting server-controlled fields:
+  ```ts
+  export const createItemInputSchema = insertItemSchema
+    .omit({ id: true, userId: true, createdAt: true })
+    .extend({
+      name: z.string().trim().min(1, "Name is required"),
+    });
+  ```
+- Always re-validate with `insertItemSchema.parse({ ...input, userId })` inside the Server Action before database insertion.
+
+### 3. Shadcn Form Composition
+- Always use `FieldGroup` + `Field` + `FieldLabel` + `FieldError` from `@/components/ui/field`. Never use raw `div` with `space-y-*` or `grid gap-*` for form layout.
+- Bind validation attributes: `data-invalid={!!errors.fieldName}` on `<Field>` and `aria-invalid={!!errors.fieldName}` on controls (`<Input>`, `<Textarea>`).
+- Button loading state: `Button` has no `isPending` or `isLoading` prop. Compose with `<Spinner data-icon="inline-start" />` and `disabled={isSubmitting}`.
+- Button icons must use `data-icon="inline-start"` or `data-icon="inline-end"` with no sizing classes.
+
+### 4. Dialog & Modal Form Composition
+- This project uses Base UI (`@base-ui/react/dialog`). Triggers and close buttons use `render={<Button ... />}` (not Radix's `asChild`).
+- Component trigger props should be typed as `React.ReactElement` (not `React.ReactNode`) to satisfy Base UI's `render` prop type requirements.
+- Always include `DialogTitle` and `DialogDescription` inside `DialogHeader` for accessibility.
+
+### 5. Authentication in Actions
+- Never trust `userId` passed from client form submissions.
+- Always retrieve the authenticated user on the server inside Server Actions using Clerk's `await auth()` from `@clerk/nextjs/server`:
+  ```ts
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Unauthorized" };
+  }
+  ```
+- For Clerk conditional UI rendering in Next.js 16 / Core 3, use `<Show when="signed-in">` and `<Show when="signed-out">` (do not use removed `<SignedIn>`/`<SignedOut>` components).
