@@ -117,3 +117,29 @@ export const createBotInputSchema = insertBotSchema
   });
 
 export type CreateBotInput = z.infer<typeof createBotInputSchema>;
+
+export const updateBotInputSchema = insertBotSchema
+  .omit({
+    userId: true,
+    createdAt: true,
+    sandboxId: true,
+  })
+  .extend({
+    id: z.string().min(1, "Bot ID is required"),
+    name: z.string().trim().min(1, "Name is required"),
+    job: z.string().trim().min(1, "Job is required"),
+    avatar: z.string().trim().min(1, "Avatar seed is required"),
+    instructions: z.string().trim().optional(),
+  });
+
+export type UpdateBotInput = z.infer<typeof updateBotInputSchema>;
+
+export const deleteBotInputSchema = insertBotSchema
+  .pick({
+    id: true,
+  })
+  .extend({
+    id: z.string().min(1, "Bot ID is required"),
+  });
+
+export type DeleteBotInput = z.infer<typeof deleteBotInputSchema>;
