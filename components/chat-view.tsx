@@ -2,7 +2,16 @@
 
 import * as React from "react"
 import { useChat } from "@ai-sdk/react"
-import { DefaultChatTransport } from "ai"
+import {
+  useLoadTranscript,
+  useTriggerChatTransport,
+} from "@trigger.dev/sdk/chat/react"
+import type { chatAgent } from "@/trigger/chat"
+import {
+  mintChatAccessToken,
+  startChatSession,
+  loadTranscript,
+} from "@/actions/chat"
 import {
   Conversation,
   ConversationContent,
@@ -22,8 +31,11 @@ import {
   type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input"
 import { ChatAvatar } from "@/components/chat-avatar"
+import { Spinner } from "@/components/ui/spinner"
+import type { UIMessage } from "ai"
 
 export interface ChatViewProps {
+  chatId: string
   bot?: {
     id?: string
     name: string
@@ -33,7 +45,7 @@ export interface ChatViewProps {
   } | null
 }
 
-export function ChatView({ bot }: ChatViewProps) {
+export function ChatView({ chatId, bot }: ChatViewProps) {
   const systemPrompt = React.useMemo(() => {
     if (!bot) return undefined
     const parts: string[] = []
@@ -48,16 +60,57 @@ export function ChatView({ bot }: ChatViewProps) {
     return parts.length > 0 ? parts.join("\n\n") : undefined
   }, [bot])
 
-  const transport = React.useMemo(
-    () =>
-      new DefaultChatTransport({
-        body: systemPrompt ? { system: systemPrompt } : undefined,
-      }),
-    [systemPrompt]
+  const transport = useTriggerChatTransport<typeof chatAgent>({
+    task: "chat-agent",
+    accessToken: ({ chatId: id }) => mintChatAccessToken(id),
+    startSession: ({ chatId: id, clientData }) =>
+      startChatSession({ chatId: id, clientData }),
+    clientData: systemPrompt ? { system: systemPrompt } : undefined,
+  })
+
+  const { messages: initialMessages, isLoading } = useLoadTranscript(
+    chatId,
+    loadTranscript,
+    { transport }
   )
 
+  if (isLoading) {
+    return (
+      <div className="flex h-full flex-1 items-center justify-center">
+        <Spinner className="size-6 text-muted-foreground" />
+      </div>
+    )
+  }
+
+  return (
+    <ChatMessages
+      key={chatId}
+      chatId={chatId}
+      bot={bot}
+      initialMessages={initialMessages}
+      transport={transport}
+    />
+  )
+}
+
+interface ChatMessagesProps {
+  chatId: string
+  bot: ChatViewProps["bot"]
+  initialMessages: UIMessage[]
+  transport: ReturnType<typeof useTriggerChatTransport<typeof chatAgent>>
+}
+
+function ChatMessages({
+  chatId,
+  bot,
+  initialMessages,
+  transport,
+}: ChatMessagesProps) {
   const { messages, sendMessage, status, stop, error } = useChat({
+    id: chatId,
+    messages: initialMessages,
     transport,
+    resume: initialMessages.length > 0,
   })
 
   const handleSubmit = React.useCallback(
@@ -99,7 +152,7 @@ export function ChatView({ bot }: ChatViewProps) {
             messages.map((message) => {
               const text = message.parts
                 .filter((part) => part.type === "text")
-                .map((part) => part.text)
+                .map((part) => (part as { text: string }).text)
                 .join("")
 
               return (
@@ -120,7 +173,8 @@ export function ChatView({ bot }: ChatViewProps) {
             <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
               <p className="font-medium">Failed to generate response</p>
               <p className="mt-1 text-xs opacity-90">
-                {error.message || "An unexpected error occurred while communicating with the AI model."}
+                {error.message ||
+                  "An unexpected error occurred while communicating with the AI model."}
               </p>
             </div>
           )}

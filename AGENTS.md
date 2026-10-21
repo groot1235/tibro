@@ -102,4 +102,10 @@ Dart or C# API attributed to DiceBear is invented rather than outdated.
     return { success: false, error: "Unauthorized" };
   }
   ```
-- For Clerk conditional UI rendering in Next.js 16 / Core 3, use `<Show when="signed-in">` and `<Show when="signed-out">` (do not use removed `<SignedIn>`/`<SignedOut>` components).
+- For Clerk conditional UI rendering in Next.js 16 / Core 3, use `<Show when="signed-in">` and `<Show when="signed-out">` (do not use removed `<SignedIn>`/`<SignedOut>` components).
+
+<!-- TRIGGER.DEV SKILLS START -->
+## Trigger.dev agent skills
+
+This project has Trigger.dev agent skills installed in `.agents/skills/`. Before writing or changing Trigger.dev code (background tasks, scheduled tasks, realtime, or chat.agent AI agents), load the most relevant skill: `trigger-authoring-chat-agent`, `trigger-authoring-tasks`, `trigger-chat-agent-advanced`, `trigger-cost-savings`, `trigger-getting-started`, `trigger-realtime-and-frontend`.
+<!-- TRIGGER.DEV SKILLS END -->

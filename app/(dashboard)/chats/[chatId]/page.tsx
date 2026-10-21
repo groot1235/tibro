@@ -28,7 +28,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
     <div className="flex h-svh max-h-svh flex-1 flex-col overflow-hidden bg-background text-foreground">
       <ChatHeader chat={chat} />
       <main className="flex flex-1 min-h-0 flex-col overflow-hidden">
-        <ChatView bot={bot} />
+        <ChatView chatId={chatId} bot={bot} />
       </main>
     </div>
   )
