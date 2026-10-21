@@ -208,7 +208,7 @@ export function AppSidebar({
       <BotDialog
         open={botDialogOpen}
         onOpenChange={setBotDialogOpen}
-        trigger={<span className="hidden" />}
+        trigger={<button type="button" className="hidden" />}
       />
       <CommandDialog
         open={commandOpen}

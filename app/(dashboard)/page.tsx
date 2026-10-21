@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server"
 import { nanoid } from "nanoid"
 import { BotDialog } from "@/components/bot-dialog"
 import { ChatAvatar } from "@/components/chat-avatar"
@@ -12,7 +13,8 @@ import {
 
 export const dynamic = "force-dynamic"
 
-export default function Page() {
+export default async function Page() {
+  await auth.protect()
   const seed = nanoid()
 
   return (
